@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Movie Viewer</string>
+    <string name="menu_sort_popular">Sort by Popularity</string>
+    <string name="menu_sort_top_rated">Sort by Ratings</string>
+    <string name="moviedb_api_key">6bc5dc78765f03b88954801bdc8c6596</string>
+    <string name="view_my_fav">View my Fav</string>
+    <string name="sign_out">Sign Out</string>
+</resources>

@@ -13,8 +13,7 @@ import androidx.lifecycle.Observer
 import kotlinx.coroutines.*
 import nyp.sit.movieviewer.intermediate.entity.MovieItem
 import java.lang.Exception
-import android.content.res.Configuration
-import android.widget.AbsListView
+
 
 class ViewListOfMoviesActivity : AppCompatActivity() {
     private var currentPosition = 0
