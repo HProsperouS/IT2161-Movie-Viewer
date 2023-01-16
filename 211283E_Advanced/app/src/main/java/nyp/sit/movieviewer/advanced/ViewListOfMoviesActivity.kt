@@ -26,8 +26,8 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
 
     private var displayType = SHOW_BY_TOP_RATED
 
-    var moviesAdapter : MovieAdapter ?= null
-    private var allMovies : List<MovieItem> ?= null
+    var moviesAdapter: MovieAdapter? = null
+    private var allMovies: List<MovieItem>? = null
 
     var appCoroutineScope: CoroutineScope? = null
 
@@ -41,7 +41,7 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
         appCoroutineScope = CoroutineScope(Job() + Dispatchers.IO)
 
         // Initialize AWS Mobile Client
-        AWSMobileClient.getInstance().initialize(this,object : Callback<UserStateDetails> {
+        AWSMobileClient.getInstance().initialize(this, object : Callback<UserStateDetails> {
 
             override fun onResult(result: UserStateDetails?) {
                 Log.d("Cognito", result?.userState?.name.toString())
@@ -56,13 +56,13 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
         movieViewModel.allMovies.observe(this, Observer {
             val moviesConvertList = mutableListOf<MovieItem>()
             allMovies = it
-            for (movie in it)
-            {
+
+            for (movie in it) {
                 moviesConvertList.add(movie)
             }
 
             it?.let {
-                moviesAdapter = MovieAdapter(this,R.layout.card_items_movie, moviesConvertList)
+                moviesAdapter = MovieAdapter(this, R.layout.card_items_movie, moviesConvertList)
                 val listView: ListView = findViewById(R.id.movielist)
 
                 if (savedInstanceState != null) {
@@ -82,15 +82,15 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
         })
     }
 
-    private fun GoMovieDetail(movie: MovieItem){
+    private fun GoMovieDetail(movie: MovieItem) {
         println(movie)
-        val intent = Intent(this@ViewListOfMoviesActivity,ItemDetailActivity::class.java)
-        intent.putExtra("overview", movie.overview )
+        val intent = Intent(this@ViewListOfMoviesActivity, ItemDetailActivity::class.java)
+        intent.putExtra("overview", movie.overview)
         intent.putExtra("release_date", movie.release_date)
-        intent.putExtra("popularity", movie.popularity )
-        intent.putExtra("vote_count", movie.vote_count )
-        intent.putExtra("vote_average", movie.vote_average )
-        intent.putExtra("language", movie.original_language )
+        intent.putExtra("popularity", movie.popularity)
+        intent.putExtra("vote_count", movie.vote_count)
+        intent.putExtra("vote_average", movie.vote_average)
+        intent.putExtra("language", movie.original_language)
         intent.putExtra("adult", movie.adult)
         intent.putExtra("video", movie.video)
         intent.putExtra("poster_path", movie.poster_path)
@@ -120,28 +120,30 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
         }
 
         val movieJob = CoroutineScope(Job() + Dispatchers.IO).async() {
-            val movieRequestUrl = NetworkUtils.buildUrl(showTypeStr!!, getString(R.string.moviedb_api_key))
+            val movieRequestUrl =
+                NetworkUtils.buildUrl(showTypeStr!!, getString(R.string.moviedb_api_key))
 
-            try
-            {
+            try {
                 val jsonMovieResponse = NetworkUtils.getResponseFromHttpUrl(movieRequestUrl!!)
 
-                val responseList = movieDBJsonUtils.getMovieDetailsFromJson(this@ViewListOfMoviesActivity, jsonMovieResponse!!)
+                val responseList = movieDBJsonUtils.getMovieDetailsFromJson(
+                    this@ViewListOfMoviesActivity,
+                    jsonMovieResponse!!
+                )
 
                 responseList
-            }
-            catch (e: Exception)
-            {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 null
             }
         }
 
-        GlobalScope.launch(Dispatchers.Main){
+        GlobalScope.launch(Dispatchers.Main) {
+            movieViewModel.delete()
             val movieList = movieJob.await()
-            if(movieList != null){
+            if (movieList != null) {
 
-                for (movie in movieList){
+                for (movie in movieList) {
                     movieViewModel.insert(
                         MovieItem(
                             0,
@@ -157,7 +159,8 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
                             movie.popularity,
                             movie.vote_count,
                             movie.video,
-                            movie.vote_average)
+                            movie.vote_average
+                        )
                     )
                 }
             }
@@ -183,6 +186,10 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
             R.id.signOut -> {
                 runLoginOut()
             }
+            R.id.viewFav -> {
+                val intent = Intent(this@ViewListOfMoviesActivity, FavMoviesActivity::class.java)
+                startActivity(intent)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -204,20 +211,20 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
 
     // Sign Out from Cognito and redirect the user back to login screen
     private fun runLoginOut() {
-        appCoroutineScope?.launch {
+        appCoroutineScope?.launch() {
             AWSMobileClient.getInstance()
-                .signOut(SignOutOptions.builder().signOutGlobally(false).build())
-                    object : Callback<Void>{
+                .signOut(SignOutOptions.builder().signOutGlobally(false).build(),
+                    object : Callback<Void> {
                         override fun onResult(result: Void?) {
-                            val intent = Intent(applicationContext, LoginActivity::class.java)
+                            val intent = Intent(this@ViewListOfMoviesActivity, LoginActivity::class.java)
                             startActivity(intent)
                             finish()
                         }
 
-                        override fun onError(e: Exception?) {
-                            Log.e("SignOutError", "Exception: $e")
+                        override fun onError(e: java.lang.Exception?) {
+
                         }
-                    }
+                    })
         }
     }
 }

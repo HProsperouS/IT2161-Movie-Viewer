@@ -114,6 +114,7 @@ class ViewListOfMoviesActivity : AppCompatActivity() {
         }
 
         GlobalScope.launch(Dispatchers.Main){
+            movieViewModel.delete()
             val movieList = movieJob.await()
             if(movieList != null){
 

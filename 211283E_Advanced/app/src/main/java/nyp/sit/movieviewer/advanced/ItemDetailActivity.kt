@@ -21,17 +21,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import nyp.sit.movieviewer.advanced.entity.MovieItem
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.collections.HashMap
 
 class ItemDetailActivity : AppCompatActivity() {
 
     var activityCoroutineScope:CoroutineScope? = null
     var dynamoDBMapper : DynamoDBMapper? = null
-    var currentFavMovie: FavMovie? = null
+
+    var currentFavMovie: FavoriteMovie? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,20 +37,21 @@ class ItemDetailActivity : AppCompatActivity() {
         activityCoroutineScope = CoroutineScope(Job() + Dispatchers.IO)
 
         activityCoroutineScope?.launch() {
-            //Initialize DynamoDBMapper
-            val credentials : AWSCredentials = AWSMobileClient.getInstance().credentials
-            val dynamoDBClient = AmazonDynamoDBClient(credentials)
+            try {
+                //Initialize DynamoDBMapper
+                val credentials: AWSCredentials = AWSMobileClient.getInstance().credentials
+                val dynamoDBClient = AmazonDynamoDBClient(credentials)
 
-            dynamoDBMapper = DynamoDBMapper.builder()
-                .dynamoDBClient(dynamoDBClient)
-                .awsConfiguration(
-                    AWSMobileClient.getInstance().configuration
-                ).build()
+                dynamoDBMapper = DynamoDBMapper.builder()
+                    .dynamoDBClient(dynamoDBClient)
+                    .awsConfiguration(
+                        AWSMobileClient.getInstance().configuration
+                    ).build()
 
+            } catch (e: Exception) {
+                Log.d("DynamoDB", "Exception ${e.message}")
+            }
         }
-//        catch(e:Exception){
-//            Log.d("DynamoDB", "Exception ${e.message}")
-//        }
 
         val overview = intent.getStringExtra("overview")
         val release_date = intent.getStringExtra("release_date")
@@ -77,41 +75,51 @@ class ItemDetailActivity : AppCompatActivity() {
         Picasso.get().load("https://image.tmdb.org/t/p/original/${poster_path}").into(posterIV)
     }
 
-    fun runCurrentFavs(v: View) {
+//    fun runCurrentFavs(v: View) {
+//
+//        activityCoroutineScope?.launch() {
+//            //Retrieve any existing data from DynamoDBMapper table
+//            //Create the scan expression to retrieve only data created by the user
+//            val eav = HashMap<String,AttributeValue>()
+//            eav.put(":val1",AttributeValue().withS(AWSMobileClient.getInstance().username))
+//
+//            val queryExpression =
+//                DynamoDBScanExpression().withFilterExpression("id = :val1")
+//                    .withExpressionAttributeValues(eav)
+//            val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java,queryExpression)
+//            //For each item retrieved, assign the data to a variable in the activity.
+//            // Create a loop to printout the data of each note into a string.
+//            // If no item exist, create a new FavMovie
+//
+//            if (itemList?.size != 0 && itemList != null){
+//                for (i in itemList.iterator()){
+//                    currentFavMovie = i
+//                }
+//            }else{
+//                currentFavMovie = FavoriteMovie()
+//                currentFavMovie?.apply {
+//                    id = AWSMobileClient.getInstance().username
+//                    favMovie = mutableListOf<FavoriteMovie.MovieItems>()
+//                }
+//            }
+//        }
+//
+//    }
 
-        activityCoroutineScope?.launch() {
-            //Retrieve any existing data from DynamoDBMapper table
-            //Create the scan expression to retrieve only data created by the user
-            val eav = HashMap<String,AttributeValue>()
-            eav.put(":val1",AttributeValue().withS(AWSMobileClient.getInstance().username))
+    fun runAddFav(movie:FavoriteMovie.MovieItems) {
 
-            val queryExpression =
-                DynamoDBScanExpression().withFilterExpression("id = :val1")
-                    .withExpressionAttributeValues(eav)
-            val itemList = dynamoDBMapper?.scan(FavMovie::class.java,queryExpression)
-            //For each item retrieved, assign the data to a variable in the activity.
-            // Create a loop to printout the data of each note into a string.
-            // If no item exist, create a new FavMovie
-
-            if (itemList?.size != 0 && itemList != null){
-                for (i in itemList.iterator()){
-                    currentFavMovie = i
-                }
-            }
+        currentFavMovie = FavoriteMovie()
+        currentFavMovie?.apply {
+            id = AWSMobileClient.getInstance().username
+            favMovie = mutableListOf<FavoriteMovie.MovieItems>()
         }
+        currentFavMovie?.favMovie?.add(movie)
 
-    }
-
-    fun runAddFav(movieItem: MovieItem) {
-        var newFavMovie = FavMovie()
-        newFavMovie.id = AWSMobileClient.getInstance().username
-        newFavMovie.favMovie = listOf(movieItem)
         //Make use of DynamoDBMapper to save NotesDO to DynamoDB table.
         activityCoroutineScope?.launch() {
-
+            dynamoDBMapper?.save(currentFavMovie)
         }
-
-
+        println("Current List ${currentFavMovie}")
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -129,7 +137,7 @@ class ItemDetailActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun getMovie():MovieItem{
+    private fun getMovie(): FavoriteMovie.MovieItems {
         val overview = intent.getStringExtra("overview")
         val release_date = intent.getStringExtra("release_date")
         val popularity = intent.getDoubleExtra("popularity",0.0)
@@ -146,8 +154,7 @@ class ItemDetailActivity : AppCompatActivity() {
         val original_title = intent.getStringExtra("original_title")
         val title = intent.getStringExtra("title")
 
-        val movie = MovieItem(
-            id = id,
+        val movie = FavoriteMovie.MovieItems(
             backdrop_path = backdrop_path!!,
             genre_ids = genre_ids!!,
             original_title = original_title!!,

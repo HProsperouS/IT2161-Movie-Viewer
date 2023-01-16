@@ -1,5 +1,4 @@
 {
-  "Version": "0.1.0",
   "IdentityManager": {
     "Default": {}
   },
@@ -13,14 +12,15 @@
   },
   "CognitoUserPool": {
     "Default": {
-      "AppClientId": "76o636epeofa2n9srbdclq6i5k",
       "PoolId": "ap-southeast-1_th4flKmDD",
+      "AppClientId": "76o636epeofa2n9srbdclq6i5k",
       "Region": "ap-southeast-1"
     }
   },
   "DynamoDBObjectMapper": {
     "Default": {
       "Region": "ap-southeast-1"
+
     }
   }
 }

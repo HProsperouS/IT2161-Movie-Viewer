@@ -37,3 +37,24 @@ class MovieAdapter(
     }
 
 }
+
+class FavoriteMovieAdapter(context: Context, resource: Int, items: List<FavoriteMovie.MovieItems>) :
+    ArrayAdapter<FavoriteMovie.MovieItems>(context, resource, items) {
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val item = getItem(position)
+
+        // Inflate the custom layout for the list item
+        val inflater = LayoutInflater.from(context)
+        val view = inflater.inflate(R.layout.card_items_movie, parent, false)
+
+        // Bind the data from the item to the views in the layout
+        val titleTextView = view.findViewById<TextView>(R.id.name)
+        titleTextView.text = item?.title
+
+        val posterImageView = view.findViewById<ImageView>(R.id.image)
+        Picasso.get().load("https://image.tmdb.org/t/p/original/${item?.poster_path}").resizeDimen(R.dimen.poster_width, R.dimen.poster_height).into(posterImageView)
+
+        return view
+    }
+}

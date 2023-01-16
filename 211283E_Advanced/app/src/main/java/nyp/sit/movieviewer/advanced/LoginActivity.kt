@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
+import com.amazonaws.mobile.client.UserState
 import com.amazonaws.mobile.client.UserStateDetails
 import com.amazonaws.mobile.client.results.SignInResult
 import com.amazonaws.mobile.client.results.SignInState
@@ -32,6 +33,10 @@ class LoginActivity : AppCompatActivity() {
 
             override fun onResult(result: UserStateDetails?) {
                 Log.d("Cognito", result?.userState?.name.toString())
+                if(result?.userState == UserState.SIGNED_IN){
+                    val intent = Intent(this@LoginActivity, ViewListOfMoviesActivity::class.java)
+                    startActivity(intent)
+                }
             }
 
             override fun onError(e: Exception?) {
