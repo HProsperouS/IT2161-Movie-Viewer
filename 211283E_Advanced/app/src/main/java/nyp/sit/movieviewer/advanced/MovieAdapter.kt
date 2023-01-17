@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.CoroutineScope
 import nyp.sit.movieviewer.advanced.entity.MovieItem
 
 class MovieAdapter(
@@ -38,7 +39,7 @@ class MovieAdapter(
 
 }
 
-class FavoriteMovieAdapter(context: Context, resource: Int, items: List<FavoriteMovie.MovieItems>) :
+class FavoriteMovieAdapter(context: Context, resource: Int, items: MutableList<FavoriteMovie.MovieItems>) :
     ArrayAdapter<FavoriteMovie.MovieItems>(context, resource, items) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

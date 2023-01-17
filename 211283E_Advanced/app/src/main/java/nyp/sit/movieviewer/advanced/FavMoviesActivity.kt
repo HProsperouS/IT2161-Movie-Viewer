@@ -8,12 +8,9 @@ import com.amazonaws.auth.AWSCredentials
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedList
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.PaginatedScanList
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import kotlinx.coroutines.*
-import nyp.sit.movieviewer.advanced.entity.MovieItem
 
 class FavMoviesActivity : AppCompatActivity() {
     var activityCoroutineScope:CoroutineScope? = null
@@ -42,35 +39,44 @@ class FavMoviesActivity : AppCompatActivity() {
     }
 
     fun runRetrieveFavs() {
+        activityCoroutineScope?.launch() {
+            try {
+                //Retrieve any existing data from DynamoDBMapper table
+                //Create the scan expression to retrieve only data created by the user
+                val eav = HashMap<String, AttributeValue>()
+                eav.put(":val1", AttributeValue().withS(AWSMobileClient.getInstance().username))
 
-        try {
-            //Retrieve any existing data from DynamoDBMapper table
-            //Create the scan expression to retrieve only data created by the user
-            val eav = HashMap<String, AttributeValue>()
-            eav.put(":val1", AttributeValue().withS(AWSMobileClient.getInstance().username))
+                val queryExpression =
+                    DynamoDBScanExpression().withFilterExpression("id = :val1")
+                        .withExpressionAttributeValues(eav)
+                val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java, queryExpression)
+                println("Item List Here ${itemList}")
+                if (itemList?.size != 0 && itemList != null){
+                    val listView: ListView = findViewById(R.id.movielist)
+                    val list: MutableList<FavoriteMovie.MovieItems>? = itemList.toList()[0].favMovie
+                    withContext(Dispatchers.Main){
+                        moviesAdapter = FavoriteMovieAdapter(this@FavMoviesActivity, R.layout.card_items_movie, list!!)
+                        listView.adapter = moviesAdapter
+                    }
+                }else{}
+//                if (itemList?.size != 0 && itemList != null) {
+//                    val list: MutableList<FavoriteMovie.MovieItems>? = itemList.toList()[0].favMovie
+//                    moviesAdapter = list?.let {
+//                        FavoriteMovieAdapter(
+//                            this, R.layout.card_items_movie,
+//                            it
+//                        )
+//                    }
+//                    val listView: ListView = findViewById(R.id.favList)
+//                    listView.adapter = moviesAdapter
+//                } else {
+//
+//                }
 
-            val queryExpression =
-                DynamoDBScanExpression().withFilterExpression("id = :val1")
-                    .withExpressionAttributeValues(eav)
-            val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java,queryExpression)
-            println("Item List Here ${itemList}")
-
-            if (itemList?.size != 0 && itemList != null){
-                val list: MutableList<FavoriteMovie.MovieItems>?= itemList.toList()[0].favMovie
-                moviesAdapter = list?.let {
-                    FavoriteMovieAdapter(this, R.layout.card_items_movie,
-                        it
-                    )
-                }
-                val listView: ListView = findViewById(R.id.favList)
-                listView.adapter = moviesAdapter
-            }else{
-
+            } catch (e: Exception) {
+                Log.d("DynamoDB Retrieve", "Exception ${e.message}")
             }
-
-        }catch (e: Exception) {
-            Log.d("DynamoDB Retrieve", "Exception ${e.message}")
         }
-        }
+    }
 }
 
