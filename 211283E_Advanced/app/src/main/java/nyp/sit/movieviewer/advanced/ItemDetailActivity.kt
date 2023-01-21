@@ -1,34 +1,26 @@
 package nyp.sit.movieviewer.advanced
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.AttributeSet
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.amazonaws.auth.AWSCredentials
 import com.amazonaws.mobile.client.AWSMobileClient
-import com.amazonaws.mobile.config.AWSConfiguration
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper
 import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBScanExpression
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_item_detail.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.collections.HashMap
+import kotlinx.coroutines.*
 
 class ItemDetailActivity : AppCompatActivity() {
 
     var activityCoroutineScope:CoroutineScope? = null
     var dynamoDBMapper : DynamoDBMapper? = null
 
-    var currentFavMovie: FavoriteMovie? = null
+     var currentFavMovie: FavoriteMovie? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,51 +67,34 @@ class ItemDetailActivity : AppCompatActivity() {
         Picasso.get().load("https://image.tmdb.org/t/p/original/${poster_path}").into(posterIV)
     }
 
-//    fun runCurrentFavs(v: View) {
-//
-//        activityCoroutineScope?.launch() {
-//            //Retrieve any existing data from DynamoDBMapper table
-//            //Create the scan expression to retrieve only data created by the user
-//            val eav = HashMap<String,AttributeValue>()
-//            eav.put(":val1",AttributeValue().withS(AWSMobileClient.getInstance().username))
-//
-//            val queryExpression =
-//                DynamoDBScanExpression().withFilterExpression("id = :val1")
-//                    .withExpressionAttributeValues(eav)
-//            val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java,queryExpression)
-//            //For each item retrieved, assign the data to a variable in the activity.
-//            // Create a loop to printout the data of each note into a string.
-//            // If no item exist, create a new FavMovie
-//
-//            if (itemList?.size != 0 && itemList != null){
-//                for (i in itemList.iterator()){
-//                    currentFavMovie = i
-//                }
-//            }else{
-//                currentFavMovie = FavoriteMovie()
-//                currentFavMovie?.apply {
-//                    id = AWSMobileClient.getInstance().username
-//                    favMovie = mutableListOf<FavoriteMovie.MovieItems>()
-//                }
-//            }
-//        }
-//
-//    }
-
-    fun runAddFav(movie:FavoriteMovie.MovieItems) {
-
-        currentFavMovie = FavoriteMovie()
-        currentFavMovie?.apply {
-            id = AWSMobileClient.getInstance().username
-            favMovie = mutableListOf<FavoriteMovie.MovieItems>()
-        }
-        currentFavMovie?.favMovie?.add(movie)
-
-        //Make use of DynamoDBMapper to save NotesDO to DynamoDB table.
+    fun runAddFav(movie: FavoriteMovie.MovieItems) {
         activityCoroutineScope?.launch() {
-            dynamoDBMapper?.save(currentFavMovie)
+            val eav = HashMap<String, AttributeValue>()
+            eav.put(":user", AttributeValue().withS(AWSMobileClient.getInstance().username))
+
+            val queryExpression =
+                DynamoDBScanExpression().withFilterExpression("id = :user")
+                    .withExpressionAttributeValues(eav)
+
+            val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java, queryExpression)
+            if (itemList?.size != 0 && itemList != null) {
+                itemList[0].favMovie?.add(movie)
+                activityCoroutineScope?.launch() {
+                    dynamoDBMapper?.save(itemList[0])
+                }
+            } else {
+                currentFavMovie = FavoriteMovie()
+                currentFavMovie?.apply {
+                    id = AWSMobileClient.getInstance().username
+                    favMovie = mutableListOf<FavoriteMovie.MovieItems>()
+                }
+                currentFavMovie?.favMovie?.add(movie)
+                activityCoroutineScope?.launch() {
+                    dynamoDBMapper?.save(currentFavMovie)
+                    println("Current Movie ${movie.title}")
+                }
+            }
         }
-        println("Current List ${currentFavMovie}")
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -8,10 +8,13 @@ class FavoriteMovie {
     var id : String? = null
 
     @DynamoDBAttribute(attributeName = "favMovie")
-    var favMovie : MutableList<MovieItems>? = null
+    var favMovie : MutableList<MovieItems>? = mutableListOf()
 
     @DynamoDBDocument
     class MovieItems(
+        @DynamoDBHashKey(attributeName = "id")
+        var id : Int? = null,
+
         @DynamoDBAttribute(attributeName = "poster_path")
         var poster_path: String? = null,
 

@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".FavMoviesActivity">
+
     <ListView
         android:id="@+id/favList"
         android:layout_width="match_parent"

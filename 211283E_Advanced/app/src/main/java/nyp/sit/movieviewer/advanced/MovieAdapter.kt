@@ -39,23 +39,29 @@ class MovieAdapter(
 
 }
 
-class FavoriteMovieAdapter(context: Context, resource: Int, items: MutableList<FavoriteMovie.MovieItems>) :
-    ArrayAdapter<FavoriteMovie.MovieItems>(context, resource, items) {
+class FavoriteMovieAdapter(
+    context: Context,
+    private val resource : Int = R.layout.card_items_movie,
+    objects: MutableList<FavoriteMovie.MovieItems>
+) : ArrayAdapter<FavoriteMovie.MovieItems>(context, resource,  objects) {
+    private val mContext: Context
 
+    init {
+        mContext = context
+    }
+
+    private val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val item = getItem(position)
+        val rowView = convertView ?: inflater.inflate(R.layout.card_items_movie, parent, false)
 
-        // Inflate the custom layout for the list item
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.card_items_movie, parent, false)
+        val movie = getItem(position)
 
-        // Bind the data from the item to the views in the layout
-        val titleTextView = view.findViewById<TextView>(R.id.name)
-        titleTextView.text = item?.title
+        val titleTextView = rowView.findViewById(R.id.name) as TextView
+        titleTextView.text = movie?.title
 
-        val posterImageView = view.findViewById<ImageView>(R.id.image)
-        Picasso.get().load("https://image.tmdb.org/t/p/original/${item?.poster_path}").resizeDimen(R.dimen.poster_width, R.dimen.poster_height).into(posterImageView)
+        val posterImageView = rowView.findViewById(R.id.image) as ImageView
+        Picasso.get().load("https://image.tmdb.org/t/p/original/${movie?.poster_path}").resizeDimen(R.dimen.poster_width, R.dimen.poster_height).into(posterImageView)
 
-        return view
+        return rowView
     }
 }
