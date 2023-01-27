@@ -1,5 +1,6 @@
 package nyp.sit.movieviewer.basic
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ListView
@@ -23,5 +24,10 @@ class FavMoviesActivity : AppCompatActivity() {
         val favouriteList = sqliteHelper.getAll()
         arrayAdapter = DatabaseAdapter(this,R.layout.simpleitem,favouriteList)
         favouriteListView.adapter = arrayAdapter
+    }
+    override fun onSupportNavigateUp(): Boolean {
+        val intent = Intent(this@FavMoviesActivity,SimpleViewListOfMoviesActivity::class.java)
+        startActivity(intent)
+        return super.onSupportNavigateUp()
     }
 }
