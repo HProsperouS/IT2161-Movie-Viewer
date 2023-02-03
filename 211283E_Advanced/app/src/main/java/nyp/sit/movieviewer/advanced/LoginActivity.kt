@@ -71,25 +71,34 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun runLogin(v: View) {
-        // Make use of AWSMobileClient to SignIn.
-        appCoroutineScope?.launch {
-            AWSMobileClient.getInstance().signIn(
-                loginET.text.toString(),
-                passwordET.text.toString(),
-                null,object : Callback<SignInResult> {
-                    override fun onResult(result: SignInResult?) {
-                        Log.d("Cognito", "Sign in result: ${result.toString()}")
-                        if (result?.signInState == SignInState.DONE){
-                            val intent = Intent(v.context,ViewListOfMoviesActivity::class.java)
-                            startActivity(intent)
+        val hasError = validation()
+        if (hasError == false){
+            // Make use of AWSMobileClient to SignIn.
+            appCoroutineScope?.launch {
+                AWSMobileClient.getInstance().signIn(
+                    loginET.text.toString(),
+                    passwordET.text.toString(),
+                    null,object : Callback<SignInResult> {
+                        override fun onResult(result: SignInResult?) {
+                            Log.d("Cognito", "Sign in result: ${result.toString()}")
+                            if (result?.signInState == SignInState.DONE){
+                                val intent = Intent(v.context,ViewListOfMoviesActivity::class.java)
+                                startActivity(intent)
+                                this@LoginActivity.runOnUiThread(java.lang.Runnable {
+                                    displayToast("You have successfully log in")
+                                })
+                            }
+                        }
+
+                        override fun onError(e: Exception?) {
+                            Log.d("Cognito", "Sign in error: ${e.toString()}")
+                            this@LoginActivity.runOnUiThread(java.lang.Runnable {
+                                displayToast("Invalid Username or Password")
+                            })
                         }
                     }
-
-                    override fun onError(e: Exception?) {
-                        Log.d("Cognito", "Sign in error: ${e.toString()}")
-                    }
-                }
-            )
+                )
+            }
         }
     }
 }

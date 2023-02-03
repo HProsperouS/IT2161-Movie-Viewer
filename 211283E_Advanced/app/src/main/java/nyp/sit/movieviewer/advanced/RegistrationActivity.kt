@@ -54,15 +54,15 @@ class RegistrationActivity : AppCompatActivity() {
             val adminNum = adminNumET.text.toString()
             val pemGrp = pemET.text.toString()
 
-            val message:ArrayList<String> = arrayListOf(
-                "Login Name: ${loginName}",
-                "Password: ${password}",
-                "Email: ${email}",
-                "Admin Number: ${adminNum}",
-                "Pem Group: ${pemGrp}"
-            )
-
-            displayToast(message.joinToString("\n"))
+//            val message:ArrayList<String> = arrayListOf(
+//                "Login Name: ${loginName}",
+//                "Password: ${password}",
+//                "Email: ${email}",
+//                "Admin Number: ${adminNum}",
+//                "Pem Group: ${pemGrp}"
+//            )
+//
+//            displayToast(message.joinToString("\n"))
 
             appCoroutineScope?.launch(Dispatchers.IO) {
 
@@ -90,10 +90,16 @@ class RegistrationActivity : AppCompatActivity() {
                             val intent = Intent(v.context, LoginActivity::class.java)
                             // Start the LoginActivity
                             startActivity(intent)
+                            this@RegistrationActivity.runOnUiThread(java.lang.Runnable {
+                                displayToast("You have successfully registered")
+                            })
                         }
 
                         override fun onFailure(exception: Exception?) {
                             Log.d("Cognito", "Exception: ${exception?.message}")
+                            this@RegistrationActivity.runOnUiThread(java.lang.Runnable {
+                                displayToast("There is an error, please try again")
+                            })
                         }
                     }
                 )

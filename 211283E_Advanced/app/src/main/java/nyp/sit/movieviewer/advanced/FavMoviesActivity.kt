@@ -17,10 +17,8 @@ import kotlinx.coroutines.*
 class FavMoviesActivity : AppCompatActivity() {
     var activityCoroutineScope:CoroutineScope? = null
     var dynamoDBMapper : DynamoDBMapper? = null
-
     var moviesAdapter : FavoriteMovieAdapter ?= null
 
-    var currentMoviesList: FavoriteMovie? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fav_movies)
@@ -57,7 +55,6 @@ class FavMoviesActivity : AppCompatActivity() {
                     DynamoDBScanExpression().withFilterExpression("id = :user")
                         .withExpressionAttributeValues(eav)
                 val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java, queryExpression)
-                println("Item List Here ${itemList}")
 
                 if (itemList?.size != 0 && itemList != null){
                     withContext(Dispatchers.Main){

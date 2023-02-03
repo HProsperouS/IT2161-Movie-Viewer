@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.amazonaws.auth.AWSCredentials
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -67,6 +68,10 @@ class ItemDetailActivity : AppCompatActivity() {
         Picasso.get().load("https://image.tmdb.org/t/p/original/${poster_path}").into(posterIV)
     }
 
+    private fun displayToast(message:String){
+        Toast.makeText(this@ItemDetailActivity,message, Toast.LENGTH_LONG).show()
+    }
+
     fun runAddFav(movie: FavoriteMovie.MovieItems) {
         activityCoroutineScope?.launch() {
             val eav = HashMap<String, AttributeValue>()
@@ -77,10 +82,21 @@ class ItemDetailActivity : AppCompatActivity() {
                     .withExpressionAttributeValues(eav)
 
             val itemList = dynamoDBMapper?.scan(FavoriteMovie::class.java, queryExpression)
+
             if (itemList?.size != 0 && itemList != null) {
-                itemList[0].favMovie?.add(movie)
-                activityCoroutineScope?.launch() {
-                    dynamoDBMapper?.save(itemList[0])
+                val existingFavMovies = itemList[0].favMovie!!
+                if (!existingFavMovies.any { it.title == movie.title }) {
+                    existingFavMovies.add(movie)
+                    activityCoroutineScope?.launch {
+                        dynamoDBMapper?.save(itemList[0])
+                        this@ItemDetailActivity.runOnUiThread(java.lang.Runnable {
+                            displayToast("Movie added successfully")
+                        })
+                    }
+                }else{
+                    this@ItemDetailActivity.runOnUiThread(java.lang.Runnable {
+                        displayToast("Movie Already exist in database")
+                    })
                 }
             } else {
                 currentFavMovie = FavoriteMovie()
@@ -91,7 +107,9 @@ class ItemDetailActivity : AppCompatActivity() {
                 currentFavMovie?.favMovie?.add(movie)
                 activityCoroutineScope?.launch() {
                     dynamoDBMapper?.save(currentFavMovie)
-                    println("Current Movie ${movie.title}")
+                    this@ItemDetailActivity.runOnUiThread(java.lang.Runnable {
+                        displayToast("Movie added successfully")
+                    })
                 }
             }
         }
